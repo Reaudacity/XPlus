@@ -9,6 +9,8 @@ import path from "path";
  *     runtimeOnly/transpile/  ← xscript TS handlers transpiled to JS
  *     packed/                 ← client-side esbuild bundles
  *     plugins/                ← local plugin files transpiled to JS
+ *     middleware/             ← middleware TS files transpiled to JS
+ *     images/                 ← optimized image cache
  *     .gitignore
  */
 export class XPDirectory {
@@ -16,18 +18,24 @@ export class XPDirectory {
   public readonly transpileDir: string;
   public readonly packedDir: string;
   public readonly pluginsDir: string;
+  public readonly middlewareDir: string;
+  public readonly imagesDir: string;
 
   constructor(projectRoot: string) {
     this.root = path.join(projectRoot, ".xp");
     this.transpileDir = path.join(this.root, "runtimeOnly", "transpile");
     this.packedDir = path.join(this.root, "packed");
     this.pluginsDir = path.join(this.root, "plugins");
+    this.middlewareDir = path.join(this.root, "middleware");
+    this.imagesDir = path.join(this.root, "images");
   }
 
   initialize(): void {
     fs.mkdirSync(this.transpileDir, { recursive: true });
     fs.mkdirSync(this.packedDir, { recursive: true });
     fs.mkdirSync(this.pluginsDir, { recursive: true });
+    fs.mkdirSync(this.middlewareDir, { recursive: true });
+    fs.mkdirSync(this.imagesDir, { recursive: true });
     this.writeGitignore();
   }
 

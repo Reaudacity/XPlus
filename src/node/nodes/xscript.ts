@@ -45,12 +45,12 @@ export class XScriptNode extends XPlusOnlyNode<XNode> {
    *
    * @param node        - The parsed <xscript> XNode
    * @param transpiler  - The project's XScriptTranspiler instance
-   * @param projectRoot - Absolute project root for path resolution
+   * @param directory - Absolute project root for path resolution
    */
   static async prepareHandler(
     node: XNode,
     transpiler: XScriptTranspiler,
-    projectRoot: string,
+    directory: string,
   ): Promise<CompiledHandler> {
     const attrs = node.getNodeData().attributes as unknown as XScriptAttributes;
 
@@ -59,7 +59,7 @@ export class XScriptNode extends XPlusOnlyNode<XNode> {
     if (!attrs.file)
       throw new Error("<xscript> is missing a `file` attribute.");
 
-    const absoluteHandlerPath = path.resolve(projectRoot, attrs.file);
+    const absoluteHandlerPath = path.resolve(directory, attrs.file);
     const routePath = attrs.path;
     const method = (attrs.method ?? "GET").toUpperCase();
 

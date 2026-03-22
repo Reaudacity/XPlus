@@ -13,6 +13,12 @@ const DEFAULTS: XPlusConfig = {
     directory: "components",
   },
   plugins: [],
+  middleware: [],
+  i18n: {
+    defaultLocale: "en",
+    locales: ["en"],
+    directory: "i18n",
+  },
 };
 
 export function loadConfig(configPath: string): XPlusConfig {
@@ -37,6 +43,11 @@ export function loadConfig(configPath: string): XPlusConfig {
       ...(parsed?.components ?? {}),
     },
     plugins: parsed?.plugins ?? [],
+    middleware: parsed?.middleware ?? [],
+    i18n: {
+      ...DEFAULTS.i18n,
+      ...(parsed?.i18n ?? {}),
+    },
   };
 }
 

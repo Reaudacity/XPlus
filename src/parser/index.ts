@@ -14,6 +14,12 @@ const ATTR_PREFIX = "@_";
 const TEXT_KEY = "#text";
 const ROOT_ELEMENT = "XPlusPage";
 
+// Layout files use a different root element
+const LAYOUT_ROOT = "XPlusLayout";
+
+// Component files
+const COMPONENT_ROOT = "XPlusComponent";
+
 interface ParsedXML {
   [key: string]: any;
 }
@@ -50,7 +56,6 @@ export class XPlusParser {
   parseFile(filePath: string, config: XPlusConfig): XDocument {
     const source = fs.readFileSync(filePath, "utf-8");
 
-    // Validate XML structure before parsing
     const validation = validateSource(source);
     if (!validation.valid) {
       const err = validation.errors[0];
@@ -63,18 +68,30 @@ export class XPlusParser {
     return this.parseSource(source, config, path.dirname(filePath));
   }
 
+  /**
+   * Parses a layout.xp file. Same as parseFile but expects XPlusLayout root.
+   */
+  parseLayoutFile(filePath: string, config: XPlusConfig): XDocument {
+    const source = fs.readFileSync(filePath, "utf-8");
+    return this.parseSource(
+      source,
+      config,
+      path.dirname(filePath),
+      LAYOUT_ROOT,
+    );
+  }
+
   parseSource(
     source: string,
     config: XPlusConfig,
     sourceDir = process.cwd(),
+    rootEl = ROOT_ELEMENT,
   ): XDocument {
     const raw = this.xmlParser.parse(source) as ParsedXML;
-    const pageArray = raw[ROOT_ELEMENT] as ParsedXML[];
+    const pageArray = raw[rootEl] as ParsedXML[];
 
     if (!pageArray?.length) {
-      throw new Error(
-        `Invalid .xp file: missing <${ROOT_ELEMENT}> root element.`,
-      );
+      throw new Error(`Invalid .xp file: missing <${rootEl}> root element.`);
     }
 
     const page = pageArray[0];
@@ -86,17 +103,16 @@ export class XPlusParser {
 
     const doc = new XDocument(config, docConfig, this.nodeRegistry);
 
-    // Store style path — resolved to absolute so the render pipeline can use it
     const styleAttr = page[`${ATTR_PREFIX}style`];
     if (typeof styleAttr === "string" && styleAttr) {
       doc.pageStylePath = path.resolve(sourceDir, styleAttr);
     }
 
-    doc.setRoot(this.buildNode(doc, ROOT_ELEMENT, page, new Set(), sourceDir));
+    doc.setRoot(this.buildNode(doc, rootEl, page, new Set(), sourceDir));
     return doc;
   }
 
-  // ── Tree building ───────────────────────────────────────────────────────────
+  // ── Tree building ────────────────────────────────────────────────────────────
 
   private buildNode(
     doc: XDocument,
@@ -120,7 +136,7 @@ export class XPlusParser {
       return this.inlineComponent(doc, tagName, resolving);
     }
 
-    // Plain HTML
+    // Plain HTML node
     return new XNode(
       doc,
       { name: tagName },
@@ -145,14 +161,11 @@ export class XPlusParser {
     const componentDir = path.dirname(component.filePath);
     const next = new Set(resolving).add(tagName);
 
-    // Component style path
-    const styleAttr = component.styleAttr;
     let componentCss: string | null = null;
-    if (styleAttr) {
-      const cssPath = path.resolve(componentDir, styleAttr);
-      if (fs.existsSync(cssPath)) {
+    if (component.styleAttr) {
+      const cssPath = path.resolve(componentDir, component.styleAttr);
+      if (fs.existsSync(cssPath))
         componentCss = fs.readFileSync(cssPath, "utf-8");
-      }
     }
 
     const children = this.buildChildrenFromRaw(
@@ -208,7 +221,7 @@ export class XPlusParser {
     return children;
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   private extractNodeData(tagName: string, raw: ParsedXML): XNodeData {
     const attributes: Record<string, any> = {};
@@ -231,11 +244,6 @@ export class XPlusParser {
       [],
       false,
     );
-  }
-
-  private readCSS(stylePath: string, sourceDir: string): string | null {
-    const resolved = path.resolve(sourceDir, stylePath);
-    return fs.existsSync(resolved) ? fs.readFileSync(resolved, "utf-8") : null;
   }
 }
 
@@ -262,10 +270,10 @@ export class XPlusFragment extends XNode {
     const styleBlock = this.css
       ? `${pad}<style>\n${this.css}\n${pad}</style>\n`
       : "";
-    const childrenHTML = this.getChildren()
+    const body = this.getChildren()
       .filter((c) => !c.isXPlusNode())
       .map((c) => c.buildHTMLRootNode(indent))
       .join("\n");
-    return styleBlock + childrenHTML;
+    return styleBlock + body;
   }
 }

@@ -11,4 +11,10 @@ export interface XPlusConfig {
   };
   plugins: string[];
   pluginOptions?: any;
+  middleware: string[];
+  i18n: {
+    defaultLocale: string;
+    locales: string[];
+    directory: string;
+  };
 }

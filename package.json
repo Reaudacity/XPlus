@@ -37,7 +37,8 @@
     "fast-xml-parser": "^5.5.8",
     "inquirer": "^13.3.2",
     "js-yaml": "^4.1.1",
-    "lodash": "^4.17.23"
+    "lodash": "^4.17.23",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

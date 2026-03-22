@@ -1,8 +1,7 @@
 import { IXDocument } from "../interfaces";
 import { NodeInformation, XNodeData } from "./types";
 
-// Tags that are self-closing in HTML
-const VOID_ELEMENTS = new Set([
+export const VOID_ELEMENTS = new Set([
   "area",
   "base",
   "br",
@@ -18,7 +17,6 @@ const VOID_ELEMENTS = new Set([
   "track",
   "wbr",
 ]);
-
 export class XNode {
   constructor(
     private document: IXDocument,
@@ -28,14 +26,10 @@ export class XNode {
     private xplusNode: boolean,
   ) {}
 
-  /**
-   * Recursively renders this node and all its children to an HTML string.
-   * Throws if called on an X+-only node — those are server-side only.
-   */
   buildHTMLRootNode(indent = 0): string {
     if (this.xplusNode) {
       throw new Error(
-        `Node <${this.nodeData.name}> is an X+-only node and cannot be transpiled to HTML.`,
+        `<${this.nodeData.name}> is an X+-only node and cannot be transpiled to HTML.`,
       );
     }
 
@@ -44,39 +38,62 @@ export class XNode {
     const attrString = attrs.length > 0 ? " " + attrs.join(" ") : "";
     const pad = "  ".repeat(indent);
 
-    // Void (self-closing) elements never have children
     if (VOID_ELEMENTS.has(tag.toLowerCase())) {
       return `${pad}<${tag}${attrString} />`;
     }
 
-    // Render text-only nodes inline
-    if (this.children.length === 0 && this.nodeData.textContent) {
-      return `${pad}<${tag}${attrString}>${this.nodeData.textContent}</${tag}>`;
+    const visibleChildren = this.children.filter((c) => !c.isXPlusNode());
+
+    // No children at all — render inline if there's text, empty tag otherwise
+    if (visibleChildren.length === 0) {
+      return this.nodeData.textContent
+        ? `${pad}<${tag}${attrString}>${this.nodeData.textContent}</${tag}>`
+        : `${pad}<${tag}${attrString}></${tag}>`;
     }
 
-    if (this.children.length === 0) {
-      return `${pad}<${tag}${attrString}></${tag}>`;
+    // Has children — render them. If there's also textContent (mixed content
+    // where the parser stored leading text on the node instead of as a child),
+    // prepend it directly so it isn't lost.
+    const parts: string[] = [];
+
+    if (this.nodeData.textContent) {
+      // Leading text before the first child element
+      parts.push(`${pad}  ${this.nodeData.textContent}`);
     }
 
-    const childrenHTML = this.children
-      .filter((child) => !child.isXPlusNode())
-      .map((child) => child.buildHTMLRootNode(indent + 1))
-      .join("\n");
+    for (const child of visibleChildren) {
+      // Inline text nodes (XTextNode) render without extra indentation padding
+      if (child instanceof XTextNode) {
+        parts.push(child.buildHTMLRootNode(0));
+      } else {
+        parts.push(child.buildHTMLRootNode(indent + 1));
+      }
+    }
 
-    return `${pad}<${tag}${attrString}>\n${childrenHTML}\n${pad}</${tag}>`;
+    // If the content is purely inline (all XTextNode children + plain text),
+    // collapse to a single line. Otherwise use block formatting.
+    const allInline = visibleChildren.every((c) => c instanceof XTextNode);
+
+    if (allInline && !this.nodeData.textContent) {
+      const inner = parts.join("");
+      return `${pad}<${tag}${attrString}>${inner}</${tag}>`;
+    }
+
+    if (allInline && this.nodeData.textContent) {
+      const inner = [
+        this.nodeData.textContent,
+        ...visibleChildren.map((c) => c.buildHTMLRootNode(0)),
+      ].join("");
+      return `${pad}<${tag}${attrString}>${inner}</${tag}>`;
+    }
+
+    return `${pad}<${tag}${attrString}>\n${parts.join("\n")}\n${pad}</${tag}>`;
   }
 
-  /**
-   * Returns each attribute as a properly formatted HTML attribute string.
-   */
   resolveAttributes(): string[] {
     return Object.entries(this.nodeData.attributes)
       .map(([name, value]) => {
-        const type = typeof value;
-        if (type === "boolean") {
-          // Boolean attributes: present = true, omitted = false
-          return value ? name : "";
-        }
+        if (typeof value === "boolean") return value ? name : "";
         return `${name}="${String(value)}"`;
       })
       .filter(Boolean);
@@ -85,23 +102,19 @@ export class XNode {
   isXPlusNode(): boolean {
     return this.xplusNode;
   }
-
   getNodeData(): XNodeData {
     return this.nodeData;
   }
-
   getNodeInfo(): NodeInformation {
     return this.nodeInfo;
   }
-
   getChildren(): XNode[] {
     return this.children;
   }
+  getDocument(): IXDocument {
+    return this.document;
+  }
 
-  /**
-   * Recursively walks this node's tree and collects all X+-only nodes.
-   * Used by the server to discover xscript routes before booting.
-   */
   collectXPlusNodes(): XNode[] {
     const results: XNode[] = [];
     if (this.xplusNode) results.push(this);
@@ -114,14 +127,36 @@ export class XNode {
 
 export abstract class XPlusOnlyNode<T> {
   constructor(private nodeInfo: NodeInformation) {}
-
   abstract createXNode(
     document: IXDocument,
     data: XNodeData,
     children?: XNode[],
   ): T;
-
   getNodeInformation(): NodeInformation {
     return this.nodeInfo;
+  }
+}
+
+/**
+ * A raw text node with no wrapping tag.
+ * Created by the parser whenever text content appears alongside child elements
+ * in the same parent — e.g. the "Example " in <p>Example <span>hi</span></p>.
+ */
+export class XTextNode extends XNode {
+  constructor(
+    document: IXDocument,
+    private text: string,
+  ) {
+    super(
+      document,
+      { name: "#text" },
+      { name: "#text", attributes: {} },
+      [],
+      false,
+    );
+  }
+
+  override buildHTMLRootNode(_indent = 0): string {
+    return this.text;
   }
 }
