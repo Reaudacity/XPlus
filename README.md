@@ -29,7 +29,7 @@ Most frontend tools start from JavaScript and bolt on HTML. X+ starts from HTML 
 ## Install
 
 ```bash
-npm install -g xplus
+npm install -g xmplus
 ```
 
 Or run without installing:
