@@ -2,6 +2,9 @@
 
 <img src="assets/logo.svg" alt="X+" width="120" />
 
+[![Build Main Package](https://github.com/Reaudacity/XPlus/actions/workflows/build-main.yml/badge.svg)](https://github.com/Reaudacity/XPlus/actions/workflows/build-main.yml) [![Build Sub Packages](https://github.com/Reaudacity/XPlus/actions/workflows/build-packages.yml/badge.svg)](https://github.com/Reaudacity/XPlus/actions/workflows/build-packages.yml) ![NPM Version](https://img.shields.io/npm/v/xmplus)  ![NPM License](https://img.shields.io/npm/l/xmplus)
+
+
 # X+
 
 **A server-first XML markup language that transpiles to HTML**

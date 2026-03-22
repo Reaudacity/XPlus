@@ -2,3 +2,5 @@ src
 example
 bun.lock
 assets
+.github
+packages
