@@ -1,8 +1,13 @@
 {
   "name": "xmplus",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "X+ lets you write pages in a structured XML dialect, run them on a Node.js server with real API routes, and export them as plain static HTML — all from the same source files.",
-  "keywords": ["html", "transpiler", "cli", "web"],
+  "keywords": [
+    "html",
+    "transpiler",
+    "cli",
+    "web"
+  ],
   "homepage": "https://github.com/reaudacity/xplus#readme",
   "bugs": {
     "url": "https://github.com/reaudacity/xplus/issues"
