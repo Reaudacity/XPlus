@@ -200,6 +200,64 @@ module.exports = function handler(req, res) {
 `;
 }
 
+// ── New plugin scaffolds ──────────────────────────────────────────────────────
+
+export function newPluginTS(name: string): string {
+  return `\
+import type { XPlusPlugin, PluginContext } from "xmplus";
+
+/**
+ * ${name} — X+ plugin
+ *
+ * Available hooks:
+ *   setup(ctx)                      runs once at server/build startup
+ *   onComponentsReady(registry)     after component scan
+ *   transformDocument(doc, route)   each time a page is parsed
+ *   transformHTML(html, route)      after HTML is rendered, before cache
+ */
+const plugin: XPlusPlugin = {
+  name: "${name}",
+
+  setup(ctx: PluginContext) {
+    ctx.log("${name} loaded");
+  },
+
+  async transformHTML(html: string, route: string): Promise<string> {
+    // Modify the HTML here and return it
+    return html;
+  },
+};
+
+export default plugin;
+`;
+}
+
+export function newPluginJS(name: string): string {
+  return `\
+/**
+ * ${name} — X+ plugin
+ *
+ * Available hooks:
+ *   setup(ctx)                      runs once at server/build startup
+ *   onComponentsReady(registry)     after component scan
+ *   transformDocument(doc, route)   each time a page is parsed
+ *   transformHTML(html, route)      after HTML is rendered, before cache
+ */
+module.exports = {
+  name: "${name}",
+
+  setup(ctx) {
+    ctx.log("${name} loaded");
+  },
+
+  async transformHTML(html, route) {
+    // Modify the HTML here and return it
+    return html;
+  },
+};
+`;
+}
+
 // ── Utilities ────────────────────────────────────────────────────────────────
 
 function slugify(str: string): string {

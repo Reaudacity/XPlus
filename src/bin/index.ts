@@ -13,7 +13,11 @@ import { XPlusServer, ServerMode } from "../server";
 import { XPDirectory } from "../xp-dir";
 import { ComponentRegistry } from "../components";
 import { StyleResolver } from "../styles";
-import { resolveAssets, faviconLinkTag } from "../assets";
+import {
+  resolveAssets,
+  faviconLinkTag,
+  defaultFaviconDataURI,
+} from "../assets";
 import { bundleScriptToFile } from "../bundler";
 import { XPLUS_VERSION, XSERVER_VERSION } from "../version";
 import {
@@ -21,6 +25,7 @@ import {
   logBuilt,
   logBuilding,
   logError,
+  logWarn,
   logInfo,
 } from "../server/logger";
 
@@ -31,6 +36,7 @@ import {
   registerCheck,
   registerRoutes,
   registerInfo,
+  registerFormat,
 } from "./commands";
 import consola from "consola";
 
@@ -51,11 +57,13 @@ function printHelp(): void {
     ${c("x+ init")} ${g("[directory]")}        scaffold a new project
     ${c("x+ new page")} ${g("<route>")}         create a page
     ${c("x+ new handler")} ${g("<n>")}          create an xscript handler
+    ${c("x+ new plugin")} ${g("<n>")}           create a plugin
 
   ${b("Develop")}
     ${c("xserver")} / ${c("x+ dev")}           start dev server  ${g("(HMR, error overlay)")}
     ${c("x+ serve")}                  start production server
     ${c("x+ check")}                   validate all .xp files
+    ${c("x+ format")}                  format .xp files with Prettier
     ${c("x+ routes")}                  list all page + API routes
 
   ${b("Build")}
@@ -115,6 +123,7 @@ registerClean(program);
 registerCheck(program);
 registerRoutes(program);
 registerInfo(program);
+registerFormat(program);
 
 // ─── build ────────────────────────────────────────────────────────────────────
 
@@ -167,8 +176,13 @@ program
 
         // Build head extras: favicon + inlined style
         const headLines: string[] = [];
-        if (assetInfo?.faviconFile)
+        if (assetInfo.defaultFavicon) {
+          headLines.push(
+            `    <link rel="icon" type="image/x-icon" href="${defaultFaviconDataURI()}" />`,
+          );
+        } else if (assetInfo.faviconFile) {
           headLines.push(`    ${faviconLinkTag(assetInfo)}`);
+        }
         if (doc.pageStylePath) {
           const styleTag = await styles.inlineTag(
             doc.pageStylePath,

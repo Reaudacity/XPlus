@@ -5,13 +5,19 @@ import chalk from "chalk";
 import inquirer from "inquirer";
 
 import { loadConfig, findConfig } from "../../config";
-import { newPage, newHandlerTS, newHandlerJS } from "../../scaffold";
+import {
+  newPage,
+  newHandlerTS,
+  newHandlerJS,
+  newPluginTS,
+  newPluginJS,
+} from "../../scaffold";
 import { logSuccess, logFatalError, logInfo } from "../../server/logger";
 
 export function registerNew(program: Command): void {
   program
     .command("new <type> <n>")
-    .description("Scaffold a new resource  (types: page, handler)")
+    .description("Scaffold a new resource  (types: page, handler, plugin)")
     .option("-c, --config <path>", "Path to xplus.yml")
     .option("--js", "Generate JavaScript instead of TypeScript")
     .action(
@@ -48,10 +54,14 @@ export function registerNew(program: Command): void {
           case "script":
             await newHandlerCommand(name, projectRoot, opts);
             break;
+          case "plugin":
+            await newPluginCommand(name, projectRoot, opts);
+            break;
           default:
             logFatalError(
               `Unknown type "${type}". Use ` +
-                `${chalk.hex("#c084fc")("page")} or ${chalk.hex("#c084fc")("handler")}.`,
+                `${chalk.hex("#c084fc")("page")}, ${chalk.hex("#c084fc")("handler")}, ` +
+                `or ${chalk.hex("#c084fc")("plugin")}.`,
             );
             process.exit(1);
         }
@@ -113,7 +123,7 @@ async function newHandlerCommand(
   const routePath = "/" + name.replace(/^\//, "");
   const slug = name.replace(/^\//, "").replace(/\//g, "-");
 
-  const questions: any = [];
+  const questions: any[] = [];
 
   // Only ask language if --js not passed and no tsconfig detected
   if (!opts.js && !tsconfigExists) {
@@ -171,6 +181,70 @@ async function newHandlerCommand(
     `\n    ${chalk.hex("#64748b")(
       `<xscript path="${routePath}" file="${path.relative(projectRoot, filePath)}" method="${method}"></xscript>`,
     )}\n`,
+  );
+}
+
+// ── x+ new plugin <name> ──────────────────────────────────────────────────────
+
+async function newPluginCommand(
+  name: string,
+  projectRoot: string,
+  opts: { js?: boolean },
+): Promise<void> {
+  const tsconfigExists = fs.existsSync(path.join(projectRoot, "tsconfig.json"));
+
+  const questions: any[] = [];
+
+  if (!opts.js && !tsconfigExists) {
+    questions.push({
+      type: "list",
+      name: "language",
+      message: "Language",
+      choices: [
+        { name: "TypeScript  (recommended)", value: "typescript" },
+        { name: "JavaScript", value: "javascript" },
+      ],
+      default: "typescript",
+    });
+  }
+
+  const answers = questions.length > 0 ? await inquirer.prompt(questions) : {};
+
+  const useJS =
+    opts.js || (!tsconfigExists && answers.language === "javascript");
+  const ext = useJS ? "js" : "ts";
+  const slug = name
+    .replace(/\s+/g, "-")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "");
+  const filePath = path.join(projectRoot, "plugins", `${slug}.${ext}`);
+
+  if (fs.existsSync(filePath)) {
+    logFatalError(
+      `Plugin already exists: ${path.relative(projectRoot, filePath)}`,
+    );
+    process.exit(1);
+  }
+
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(
+    filePath,
+    useJS ? newPluginJS(name) : newPluginTS(name),
+    "utf-8",
+  );
+
+  const relPath = path.relative(projectRoot, filePath);
+
+  console.log("");
+  logSuccess(
+    `Plugin ${chalk.hex("#e2e8f0")(name)}  ` +
+      `${chalk.hex("#475569")("→")}  ` +
+      `${chalk.hex("#64748b")(relPath)}`,
+  );
+  console.log("");
+  logInfo("Register it in xplus.yml:");
+  console.log(
+    `\n    ${chalk.hex("#64748b")(`plugins:\n      - "./${relPath}"`)}\n`,
   );
 }
 

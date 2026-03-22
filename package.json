@@ -1,6 +1,6 @@
 {
   "name": "xmplus",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "X+ lets you write pages in a structured XML dialect, run them on a Node.js server with real API routes, and export them as plain static HTML — all from the same source files.",
   "keywords": [
     "html",
@@ -32,6 +32,7 @@
     "prepublish": "bun run formatBuild"
   },
   "dependencies": {
+    "@prettier/plugin-xml": "^3.4.2",
     "boxen": "^8.0.1",
     "chalk": "^5.6.2",
     "chokidar": "^5.0.0",
