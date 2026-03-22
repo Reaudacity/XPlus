@@ -32,7 +32,7 @@ npm install -g xplus
 Or run without installing:
 
 ```bash
-npx xplus init my-site
+npm create xplus-app
 ```
 
 **Requirements:** Node.js 18+
@@ -42,7 +42,7 @@ npx xplus init my-site
 ## Quick start
 
 ```bash
-xplus init my-site
+xplus init my-site # npm create xplus-app
 cd my-site
 npm install
 x+ dev          # start the dev server on http://localhost:3000
