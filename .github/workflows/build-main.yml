@@ -2,7 +2,7 @@ name: Build Main Package
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, development ]
     paths:
       - 'src/**'
       - 'tsconfig.json'
@@ -10,7 +10,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/build-main.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, development ]
     paths:
       - 'src/**'
       - 'tsconfig.json'

@@ -2,12 +2,12 @@ name: Build Sub Packages
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, development ]
     paths:
       - 'packages/**'
       - '.github/workflows/build-packages.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, development ]
     paths:
       - 'packages/**'
 
