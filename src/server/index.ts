@@ -18,7 +18,7 @@ import { RouteCache } from "../cache";
 import { ComponentRegistry } from "../components";
 import { PluginLoader } from "../plugins";
 import { StyleResolver } from "../styles";
-import { resolveAssets, createAssetRouter, faviconLinkTag } from "../assets";
+import { resolveAssets, createAssetRouter, faviconLinkTag } from "../asset";
 import { HMRServer, hmrClientScript } from "./hmr";
 import { xplusplusRouter, xplusplusScript, readSettings } from "./xplusplus";
 import { bundleScript } from "../bundler";

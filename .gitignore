@@ -1,3 +1,4 @@
 dist
 bun.lock
 node_modules
+example

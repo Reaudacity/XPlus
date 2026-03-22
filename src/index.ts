@@ -19,7 +19,7 @@ export * from "./i18n";
 export * from "./image";
 export * from "./streaming";
 export * from "./styles";
-export * from "./assets";
+export * from "./asset";
 export * from "./validator";
 export * from "./server";
 export * from "./scaffold";

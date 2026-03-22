@@ -116,9 +116,9 @@ export function tplPackageJson(opts: ScaffoldOptions): string {
       version:     "0.1.0",
       description: opts.description,
       scripts: {
-        dev:   "xserver",
-        build: "xplus build",
-        serve: "xplus serve",
+        dev:   "x+ dev",
+        build: "x+ build",
+        serve: "x+ serve",
       },
     },
     null,

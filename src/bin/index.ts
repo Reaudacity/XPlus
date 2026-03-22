@@ -13,11 +13,7 @@ import { XPlusServer, ServerMode } from "../server";
 import { XPDirectory } from "../xp-dir";
 import { ComponentRegistry } from "../components";
 import { StyleResolver } from "../styles";
-import {
-  resolveAssets,
-  faviconLinkTag,
-  defaultFaviconDataURI,
-} from "../assets";
+import { resolveAssets, faviconLinkTag, defaultFaviconDataURI } from "../asset";
 import { bundleScriptToFile } from "../bundler";
 import { XPLUS_VERSION, XSERVER_VERSION } from "../version";
 import {
