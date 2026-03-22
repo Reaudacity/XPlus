@@ -15,6 +15,7 @@ import {
   tplPrettierRc,
   tplPrettierIgnore,
   tplGitIgnore,
+  tplReadme,
 } from "./templates";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ function buildFileTask(opts: ScaffoldOptions, ctx: TaskContext) {
   const ext = opts.language === "typescript" ? "ts" : "js";
 
   const files: Record<string, string> = {
+    "README.md":             tplReadme(opts),
     "xplus.yml":             tplXplusYml(opts),
     "app/page.xp":           tplRootPage(opts),
     [`api/hello.${ext}`]:    opts.language === "typescript" ? tplHandlerTS() : tplHandlerJS(),

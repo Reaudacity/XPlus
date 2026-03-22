@@ -1,6 +1,6 @@
 {
   "name": "create-xplus-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Project scaffolder for the X+ applications, also installs X+ in your project directory",
   "main": "dist/index.js",
   "bin": "dist/index.js",

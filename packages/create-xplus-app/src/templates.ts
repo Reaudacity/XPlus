@@ -190,6 +190,149 @@ dist/
 `;
 }
 
+// ── README.md ─────────────────────────────────────────────────────────────────
+
+export function tplReadme(opts: ScaffoldOptions): string {
+  const pm    = opts.packageManager;
+  const ext   = opts.language === "typescript" ? "ts" : "js";
+  const isTS  = opts.language === "typescript";
+
+  const devCmd:   Record<PackageManager, string> = { npm: "npm run dev",   pnpm: "pnpm dev",   yarn: "yarn dev",   bun: "bun dev"   };
+  const buildCmd: Record<PackageManager, string> = { npm: "npm run build", pnpm: "pnpm build", yarn: "yarn build", bun: "bun build" };
+  const addCmd:   Record<PackageManager, string> = { npm: "npm install",   pnpm: "pnpm add",   yarn: "yarn add",   bun: "bun add"   };
+
+  const pluginSection = opts.plugins.length
+    ? `\n## Plugins\n\nThis project has the following X+ plugins enabled:\n\n${opts.plugins.map(p => `- \`${p}\``).join("\n")}\n\nAdd or remove plugins in \`xplus.yml\` under the \`plugins\` key.\n`
+    : "";
+
+  return `# ${opts.name}
+
+${opts.description}
+
+Built with [X+](https://github.com/Reaudacity/xplus) — the server-first XML markup language.
+
+## Getting started
+
+\`\`\`bash
+${devCmd[pm]}
+\`\`\`
+
+Open [http://localhost:${opts.port}](http://localhost:${opts.port}) in your browser.
+
+## Project structure
+
+\`\`\`
+${slugify(opts.name)}/
+  xplus.yml            # project configuration
+  app/
+    page.xp            # → route: /
+  components/          # reusable .xp components
+  api/
+    hello.${ext}          # xscript API handler → GET /api/hello
+  assets/              # static files served at /
+\`\`\`
+
+## Commands
+
+| Command | Description |
+|---|---|
+| \`${devCmd[pm]}\` | Start the development server with HMR |
+| \`${buildCmd[pm]}\` | Export static HTML to \`dist/\` |
+| \`xplus check\` | Validate all \`.xp\` files |
+| \`xplus routes\` | List all page and API routes |
+
+## Pages
+
+Pages are \`.xp\` files inside \`app/\`. The directory structure maps directly to URL routes:
+
+\`\`\`
+app/page.xp           →  /
+app/about/page.xp     →  /about
+app/blog/post/page.xp →  /blog/post
+\`\`\`
+
+Create a new page:
+
+\`\`\`bash
+xplus new page about
+\`\`\`
+
+## API routes
+
+API routes are declared with \`<xscript>\` inside any page. The handler file runs on the server inside a Node VM sandbox.
+
+\`\`\`xml
+<xscript path="/api/hello" file="../api/hello.${ext}" method="GET"></xscript>
+\`\`\`
+
+\`\`\`${isTS ? "typescript" : "javascript"}
+${isTS
+  ? `import { Request, Response } from "express";\n\nexport default function handler(req: Request, res: Response) {\n  res.json({ message: "Hello!" });\n}`
+  : `module.exports = function handler(req, res) {\n  res.json({ message: "Hello!" });\n};`
+}
+\`\`\`
+
+Create a new handler:
+
+\`\`\`bash
+xplus new handler users
+\`\`\`
+
+## Components
+
+Components live in \`components/\` and are available globally — no imports needed.
+
+\`\`\`xml
+<!-- components/navbar.xp -->
+<XPlusComponent name="Navbar">
+  <nav>
+    <a href="/">Home</a>
+  </nav>
+</XPlusComponent>
+\`\`\`
+
+\`\`\`xml
+<!-- app/page.xp -->
+<Navbar />
+\`\`\`
+${pluginSection}
+## Configuration
+
+Edit \`xplus.yml\` to configure the project:
+
+\`\`\`yaml
+name: ${opts.name}
+description: ${opts.description}
+
+server:
+  port: ${opts.port}
+
+router:
+  directory: app
+
+components:
+  directory: components
+
+plugins: []
+\`\`\`
+
+## Adding dependencies
+
+\`\`\`bash
+# Add a runtime dependency
+${addCmd[pm]} some-package
+
+# Add a dev dependency
+${addCmd[pm]} ${pm === "npm" ? "--save-dev" : "--dev"} some-package
+\`\`\`
+
+## Learn more
+
+- [X+ documentation](https://github.com/Reaudacity/xplus)
+- [xmplus on npm](https://www.npmjs.com/package/xmplus)
+`;
+}
+
 // ── Utilities ─────────────────────────────────────────────────────────────────
 
 export function slugify(str: string): string {
