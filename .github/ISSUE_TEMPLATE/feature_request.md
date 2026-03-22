@@ -1,0 +1,31 @@
+---
+name: Feature Request
+about: Suggest an idea for this project
+title: "[FEAT] "
+labels: enhancement
+assignees: ''
+---
+
+## Description
+
+A clear and concise description of what the feature is about.
+
+## Problem Statement
+
+Is your feature request related to a problem? Please describe.
+
+## Proposed Solution
+
+Describe the solution you'd like.
+
+## Alternative Solutions
+
+A clear and concise description of any alternative solutions or features you've considered.
+
+## Use Case
+
+Explain the use case and why this feature would be valuable.
+
+## Additional Context
+
+Add any other context, code samples, or references here.

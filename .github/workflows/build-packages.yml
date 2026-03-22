@@ -1,0 +1,75 @@
+name: Build Sub Packages
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'packages/**'
+      - '.github/workflows/build-packages.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'packages/**'
+
+jobs:
+  build-packages:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+      fail-fast: false
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Get list of packages
+      id: packages
+      run: |
+        PACKAGES=$(find packages -maxdepth 1 -type d ! -name "packages" -printf '%f\n' | tr '\n' ' ')
+        echo "list=$PACKAGES" >> $GITHUB_OUTPUT
+        echo "Found packages: $PACKAGES"
+
+    - name: Install root dependencies
+      run: npm ci
+
+    - name: Build all sub-packages
+      run: |
+        for package in ${{ steps.packages.outputs.list }}; do
+          echo "Building packages/$package..."
+          cd packages/$package
+          npm ci
+          npm run build
+          cd ../..
+          echo "✅ Successfully built packages/$package"
+        done
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      if: success()
+      with:
+        name: packages-build-${{ matrix.node-version }}
+        path: packages/*/dist/
+        retention-days: 5
+
+    - name: Create build status summary
+      if: always()
+      run: |
+        echo "## Sub-Packages Build Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Node.js Version: ${{ matrix.node-version }}" >> $GITHUB_STEP_SUMMARY
+        echo "Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "✅ All sub-packages built successfully" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "❌ Sub-packages build failed" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
