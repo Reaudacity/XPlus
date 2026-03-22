@@ -1,5 +1,5 @@
 {
-  "name": "xplus",
+  "name": "xmplus",
   "version": "1.0.0",
   "description": "X+ lets you write pages in a structured XML dialect, run them on a Node.js server with real API routes, and export them as plain static HTML — all from the same source files.",
   "keywords": ["html", "transpiler", "cli", "web"],
@@ -23,7 +23,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "formatBuild": "bun run format && bun run build",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "prepublish": "bun run formatBuild"
   },
   "dependencies": {
     "boxen": "^8.0.1",

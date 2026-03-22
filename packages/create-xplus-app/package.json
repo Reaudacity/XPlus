@@ -1,0 +1,26 @@
+{
+  "name": "create-xplus-app",
+  "version": "1.0.0",
+  "description": "Project scaffolder for the X+ applications, also installs X+ in your project directory",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
+  },
+  "keywords": ["cli", "scaffold", "create", "app"],
+  "author": "AbdullahCXD",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "inquirer": "^13.3.2",
+    "listr2": "^10.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.9.3"
+  }
+}
