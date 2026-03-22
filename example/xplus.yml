@@ -1,0 +1,31 @@
+########## X+ Application Configuration ##########
+#
+# Run pages:  xplus build
+# Run server: xserver  (or: xplus serve)
+#
+
+name: example
+description: example — built with X+
+
+server:
+  port: 3000
+
+router:
+  directory: app
+
+components:
+  directory: components
+
+# Plugins — three specifier formats:
+#   xplus:<n>          built-in X+ plugin  (e.g. xplus:tailwindcss)
+#   ./plugins/my.ts    local file          (.ts or .js, relative to project root)
+#   some-npm-package   npm package
+#
+plugins:
+  - "xplus:meta"
+  - "xplus:tailwindcss"
+
+# Plugin-specific options (keyed by plugin name without the xplus: prefix)
+# pluginOptions:
+#   tailwindcss:
+#     cdn: true

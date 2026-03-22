@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<XPlusPage title="example" description="example — built with X+">
+
+  <h1>example</h1>
+  <p>Welcome to your new X+ project.</p>
+
+  <!--
+    xscript nodes are server-only API routes.
+    They are invisible in the transpiled HTML output.
+    Handlers can be TypeScript (.ts) or JavaScript (.js).
+  -->
+  <xscript path="/api/hello" file="../api/hello.ts" method="GET"></xscript>
+
+</XPlusPage>
