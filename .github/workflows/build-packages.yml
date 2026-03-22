@@ -24,11 +24,10 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2.2.0
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+        bun-version: latest
 
     - name: Get list of packages
       id: packages
@@ -38,15 +37,15 @@ jobs:
         echo "Found packages: $PACKAGES"
 
     - name: Install root dependencies
-      run: npm i
+      run: bun install
 
     - name: Build all sub-packages
       run: |
         for package in ${{ steps.packages.outputs.list }}; do
           echo "Building packages/$package..."
           cd packages/$package
-          npm i
-          npm run build
+          bun install
+          bun run build
           cd ../..
           echo "✅ Successfully built packages/$package"
         done
