@@ -38,14 +38,14 @@ jobs:
         echo "Found packages: $PACKAGES"
 
     - name: Install root dependencies
-      run: npm ci
+      run: npm i
 
     - name: Build all sub-packages
       run: |
         for package in ${{ steps.packages.outputs.list }}; do
           echo "Building packages/$package..."
           cd packages/$package
-          npm ci
+          npm i
           npm run build
           cd ../..
           echo "✅ Successfully built packages/$package"
