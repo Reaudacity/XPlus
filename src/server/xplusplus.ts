@@ -61,35 +61,14 @@ export function xplusplusRouter(): Router {
 
 // ── Client script ─────────────────────────────────────────────────────────────
 
-/**
- * Returns the X++ overlay as a self-contained <script> block.
- * Injected into every page in development mode.
- *
- * Keybinding: Ctrl+Shift+X  — toggle panel visibility
- * When collapsed: a small "X++" pill remains clickable in the corner
- */
 export function xplusplusScript(): string {
   return `<script id="__xpp_script">
 (function () {
   'use strict';
-
-  // ── Constants ──────────────────────────────────────────────────────────────
-
   var SETTINGS_URL = '/__xplus/settings';
-  var TOGGLE_KEY   = { key: 'X', ctrl: true, shift: true };
   var VERSION      = '1.0.0';
-
-  // ── State ──────────────────────────────────────────────────────────────────
-
-  var settings = {
-    showErrorOverlay: true,
-    overlayVisible:   true,
-  };
-
-  // Expose settings globally so the error overlay can read showErrorOverlay
+  var settings = { showErrorOverlay: true, overlayVisible: true };
   window.__xpp_settings = settings;
-
-  // ── Boot ───────────────────────────────────────────────────────────────────
 
   fetch(SETTINGS_URL)
     .then(function (r) { return r.json(); })
@@ -99,8 +78,6 @@ export function xplusplusScript(): string {
       mount();
     })
     .catch(function () { mount(); });
-
-  // ── Save ───────────────────────────────────────────────────────────────────
 
   function save(patch) {
     Object.assign(settings, patch);
@@ -113,233 +90,88 @@ export function xplusplusScript(): string {
     render();
   }
 
-  // ── Mount ──────────────────────────────────────────────────────────────────
-
   function mount() {
     injectStyles();
     injectHTML();
     render();
-    bindKeyboard();
-  }
-
-  // ── Styles ─────────────────────────────────────────────────────────────────
-
-  function injectStyles() {
-    var s = document.createElement('style');
-    s.id  = '__xpp_style';
-    s.textContent = [
-      // Pill (collapsed state)
-      '#__xpp_pill{',
-        'position:fixed;bottom:1rem;left:1rem;z-index:99997;',
-        'background:#1a1030;border:1px solid #4c1d95;border-radius:999px;',
-        'color:#a78bfa;font-family:ui-monospace,monospace;font-size:.7rem;font-weight:700;',
-        'letter-spacing:.06em;padding:.3rem .7rem;cursor:pointer;',
-        'box-shadow:0 2px 12px rgba(124,58,237,.35);',
-        'transition:opacity .15s,transform .15s;user-select:none;',
-      '}',
-      '#__xpp_pill:hover{background:#2d1b6e;transform:translateY(-1px);}',
-
-      // Panel (expanded state)
-      '#__xpp{',
-        'position:fixed;bottom:1rem;left:1rem;z-index:99997;',
-        'background:#0d0d18;border:1px solid #3b1f5e;border-radius:10px;',
-        'box-shadow:0 8px 32px rgba(0,0,0,.65);',
-        'width:260px;font-family:ui-monospace,monospace;',
-        'animation:__xpp_in .15s ease;overflow:hidden;',
-      '}',
-      '@keyframes __xpp_in{from{opacity:0;transform:translateY(6px)}}',
-
-      // Header
-      '#__xpp_head{',
-        'display:flex;align-items:center;gap:.5rem;',
-        'padding:.55rem .85rem;border-bottom:1px solid #1e1040;',
-        'cursor:default;',
-      '}',
-      '#__xpp_logo{',
-        'color:#a78bfa;font-size:.72rem;font-weight:800;letter-spacing:.05em;',
-        'flex:1;',
-      '}',
-      '#__xpp_hint{color:#334155;font-size:.6rem;letter-spacing:.04em;}',
-      '#__xpp_close{',
-        'background:none;border:none;color:#475569;cursor:pointer;',
-        'font-size:.8rem;padding:.1rem .3rem;border-radius:4px;line-height:1;',
-        'transition:color .15s;',
-      '}',
-      '#__xpp_close:hover{color:#a78bfa;}',
-
-      // Body
-      '#__xpp_body{padding:.5rem 0;}',
-
-      // Row
-      '.__xpp_row{',
-        'display:flex;align-items:center;justify-content:space-between;',
-        'padding:.4rem .85rem;gap:.75rem;',
-        'transition:background .1s;',
-      '}',
-      '.__xpp_row:hover{background:#12102a;}',
-      '.__xpp_label{color:#94a3b8;font-size:.7rem;flex:1;line-height:1.4;}',
-      '.__xpp_label small{display:block;color:#334155;font-size:.6rem;margin-top:.1rem;}',
-
-      // Toggle switch
-      '.__xpp_toggle{',
-        'position:relative;width:30px;height:16px;flex-shrink:0;',
-      '}',
-      '.__xpp_toggle input{opacity:0;width:0;height:0;position:absolute;}',
-      '.__xpp_track{',
-        'position:absolute;inset:0;border-radius:999px;',
-        'background:#1e1040;border:1px solid #2d1b6e;',
-        'cursor:pointer;transition:background .2s,border-color .2s;',
-      '}',
-      '.__xpp_toggle input:checked + .__xpp_track{',
-        'background:#7c3aed;border-color:#7c3aed;',
-      '}',
-      '.__xpp_knob{',
-        'position:absolute;top:2px;left:2px;',
-        'width:10px;height:10px;border-radius:50%;',
-        'background:#fff;transition:transform .2s;pointer-events:none;',
-      '}',
-      '.__xpp_toggle input:checked ~ .__xpp_knob{transform:translateX(14px);}',
-
-      // Divider
-      '.__xpp_divider{',
-        'height:1px;background:#1e1040;margin:.4rem .85rem;',
-      '}',
-
-      // Action button
-      '.__xpp_action{',
-        'display:flex;align-items:center;gap:.5rem;',
-        'padding:.4rem .85rem;cursor:pointer;',
-        'color:#64748b;font-size:.7rem;transition:color .15s,background .1s;',
-        'border:none;background:none;width:100%;text-align:left;',
-      '}',
-      '.__xpp_action:hover{background:#12102a;color:#a78bfa;}',
-
-      // Footer
-      '#__xpp_foot{',
-        'padding:.45rem .85rem;border-top:1px solid #1e1040;',
-        'color:#1e2a3a;font-size:.6rem;',
-      '}',
-    ].join('');
-    document.head.appendChild(s);
-  }
-
-  // ── HTML ───────────────────────────────────────────────────────────────────
-
-  function injectHTML() {
-    // Pill
-    var pill      = document.createElement('div');
-    pill.id       = '__xpp_pill';
-    pill.title    = 'X++ (Ctrl+Shift+X)';
-    pill.textContent = 'X\u207A\u207A';
-    pill.addEventListener('click', function () { save({ overlayVisible: true }); });
-    document.body.appendChild(pill);
-
-    // Panel
-    var panel = document.createElement('div');
-    panel.id  = '__xpp';
-    panel.innerHTML = [
-      '<div id="__xpp_head">',
-        '<span id="__xpp_logo">X\u207A\u207A</span>',
-        '<span id="__xpp_hint">Ctrl+Shift+X</span>',
-        '<button id="__xpp_close" title="Collapse panel">&#x2212;</button>',
-      '</div>',
-      '<div id="__xpp_body">',
-
-        // Error overlay toggle
-        toggle('errorOverlay', 'Error overlay',
-          'Show build errors as an overlay'),
-
-        '<div class="__xpp_divider"></div>',
-
-        // Hide overlay action
-        '<button class="__xpp_action" id="__xpp_hide">',
-          '\u25A1 &nbsp;Collapse panel',
-          '<small style="color:#334155;font-size:.6rem;margin-left:auto">Ctrl+Shift+X</small>',
-        '</button>',
-
-      '</div>',
-      '<div id="__xpp_foot">X+ Development Mode &mdash; v' + VERSION + '</div>',
-    ].join('');
-
-    document.body.appendChild(panel);
-
-    // Bind close / hide buttons
-    document.getElementById('__xpp_close').addEventListener('click', function () {
-      save({ overlayVisible: false });
-    });
-    document.getElementById('__xpp_hide').addEventListener('click', function () {
-      save({ overlayVisible: false });
-    });
-
-    // Bind toggles
-    bindToggle('errorOverlay', 'showErrorOverlay');
-  }
-
-  function toggle(id, label, hint) {
-    return [
-      '<div class="__xpp_row">',
-        '<div class="__xpp_label">' + label +
-          (hint ? '<small>' + hint + '</small>' : '') +
-        '</div>',
-        '<label class="__xpp_toggle">',
-          '<input type="checkbox" id="__xpp_t_' + id + '" />',
-          '<div class="__xpp_track"></div>',
-          '<div class="__xpp_knob"></div>',
-        '</label>',
-      '</div>',
-    ].join('');
-  }
-
-  function bindToggle(id, settingKey) {
-    var el = document.getElementById('__xpp_t_' + id);
-    if (!el) return;
-    el.addEventListener('change', function () {
-      var patch = {};
-      patch[settingKey] = el.checked;
-      save(patch);
-
-      // Special case: if the error overlay is being toggled off,
-      // immediately remove any overlay that's already mounted on this page.
-      if (settingKey === 'showErrorOverlay' && !el.checked) {
-        var overlay = document.getElementById('__xp_err');
-        var style   = document.getElementById('__xp_err_style');
-        if (overlay) overlay.remove();
-        if (style)   style.remove();
-      }
-    });
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
-
-  function render() {
-    var panel = document.getElementById('__xpp');
-    var pill  = document.getElementById('__xpp_pill');
-    if (!panel || !pill) return;
-
-    var visible = settings.overlayVisible;
-    panel.style.display = visible ? 'block' : 'none';
-    pill.style.display  = visible ? 'none'  : 'block';
-
-    // Sync toggles
-    syncToggle('errorOverlay', settings.showErrorOverlay);
-  }
-
-  function syncToggle(id, value) {
-    var el = document.getElementById('__xpp_t_' + id);
-    if (el) el.checked = !!value;
-  }
-
-  // ── Keyboard ───────────────────────────────────────────────────────────────
-
-  function bindKeyboard() {
     document.addEventListener('keydown', function (e) {
-      if (e.key === TOGGLE_KEY.key && e.ctrlKey && e.shiftKey) {
+      if (e.key === 'X' && e.ctrlKey && e.shiftKey) {
         e.preventDefault();
         save({ overlayVisible: !settings.overlayVisible });
       }
     });
   }
 
+  function injectStyles() {
+    var s = document.createElement('style');
+    s.id  = '__xpp_style';
+    s.textContent = [
+      '#__xpp_pill{position:fixed;bottom:1.5rem;left:1.5rem;z-index:99997;background:#fff;border:1px solid #e2e8f0;border-radius:99px;color:#000;font-family:system-ui,sans-serif;font-size:.75rem;font-weight:700;padding:.5rem 1rem;cursor:pointer;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.1);transition:all .2s ease;display:flex;align-items:center;gap:8px;user-select:none;}',
+      '#__xpp_pill:hover{transform:scale(1.05);box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);}',
+      '#__xpp_dot{width:6px;height:6px;background:#10b981;border-radius:50%;box-shadow:0 0 8px #10b981;}',
+      
+      '#__xpp{position:fixed;bottom:1.5rem;left:1.5rem;z-index:99997;background:rgba(10,10,12,0.9);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);width:280px;font-family:system-ui,-apple-system,sans-serif;overflow:hidden;animation:xpp_pop .3s cubic-bezier(0.34,1.56,0.64,1);}',
+      '@keyframes xpp_pop{from{opacity:0;transform:translateY(20px) scale(0.95)}}',
+      
+      '#__xpp_head{padding:1.25rem;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;}',
+      '#__xpp_logo{color:#fff;font-weight:800;font-size:.9rem;letter-spacing:-0.02em;}',
+      '#__xpp_close{background:rgba(255,255,255,0.05);border:none;color:#94a3b8;cursor:pointer;width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}',
+      '#__xpp_close:hover{background:rgba(255,255,255,0.1);color:#fff;}',
+      
+      '.__xpp_row{padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;transition:background 0.2s;}',
+      '.__xpp_label{color:#e2e8f0;font-size:.8rem;font-weight:500;}',
+      '.__xpp_hint{display:block;color:#64748b;font-size:.7rem;margin-top:2px;font-weight:400;}',
+      
+      '.__xpp_toggle{position:relative;width:36px;height:20px;}',
+      '.__xpp_toggle input{opacity:0;width:0;height:0;}',
+      '.__xpp_track{position:absolute;inset:0;background:#334155;border-radius:20px;cursor:pointer;transition:.2s;}',
+      '.__xpp_toggle input:checked + .__xpp_track{background:#6366f1;}',
+      '.__xpp_knob{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:.2s;}',
+      '.__xpp_toggle input:checked ~ .__xpp_knob{transform:translateX(16px);}',
+      
+      '#__xpp_foot{padding:.75rem 1.25rem;background:rgba(255,255,255,0.03);color:#475569;font-size:.65rem;font-weight:600;display:flex;justify-content:space-between;}'
+    ].join('');
+    document.head.appendChild(s);
+  }
+
+  function injectHTML() {
+    var pill = document.createElement('div');
+    pill.id = '__xpp_pill';
+    pill.innerHTML = '<span id="__xpp_dot"></span>X++ Panel';
+    pill.onclick = function() { save({ overlayVisible: true }); };
+    document.body.appendChild(pill);
+
+    var panel = document.createElement('div');
+    panel.id = '__xpp';
+    panel.innerHTML = [
+      '<div id="__xpp_head"><span id="__xpp_logo">X++ Debugger</span><button id="__xpp_close">&times;</button></div>',
+      '<div class="__xpp_row">',
+        '<div><span class="__xpp_label">Error Overlay</span><span class="__xpp_hint">Show build issues visually</span></div>',
+        '<label class="__xpp_toggle"><input type="checkbox" id="__xpp_t_err"><div class="__xpp_track"></div><div class="__xpp_knob"></div></label>',
+      '</div>',
+      '<div id="__xpp_foot"><span>v' + VERSION + '</span><span>CTRL+SHIFT+X</span></div>'
+    ].join('');
+    document.body.appendChild(panel);
+
+    document.getElementById('__xpp_close').onclick = function() { save({ overlayVisible: false }); };
+    var tErr = document.getElementById('__xpp_t_err');
+    tErr.onchange = function() { 
+      save({ showErrorOverlay: tErr.checked });
+      if(!tErr.checked) { 
+        var o = document.getElementById('__xp_err'); 
+        if(o) o.remove(); 
+      }
+    };
+  }
+
+  function render() {
+    var p = document.getElementById('__xpp');
+    var l = document.getElementById('__xpp_pill');
+    if(!p || !l) return;
+    p.style.display = settings.overlayVisible ? 'block' : 'none';
+    l.style.display = settings.overlayVisible ? 'none' : 'flex';
+    document.getElementById('__xpp_t_err').checked = settings.showErrorOverlay;
+  }
 })();
 </script>`;
 }

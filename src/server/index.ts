@@ -765,26 +765,84 @@ function devErrorDocument(route: string, err: Error): string {
 }
 
 function productionErrorPage(): string {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Error</title>
-<style>body{font-family:monospace;background:#0f0f11;color:#94a3b8;display:flex;
-align-items:center;justify-content:center;min-height:100vh;margin:0}
-.wrap{text-align:center}.code{font-size:4rem;font-weight:700;color:#1e1e2e}
-p{margin-top:.5rem;color:#475569}</style></head>
-<body><div class="wrap"><div class="code">500</div><p>Something went wrong.</p></div></body></html>`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Error — X+</title>
+  <style>
+    :root { --bg: #050505; --text: #fafafa; --sub: #71717a; --accent: #ef4444; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, system-ui, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+    .container { text-align: center; padding: 2rem; animation: fade 0.6s ease; }
+    @keyframes fade { from { opacity: 0; transform: translateY(10px); } }
+    .icon { width: 48px; height: 48px; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: var(--accent); font-weight: bold; }
+    h1 { font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+    p { font-size: 0.95rem; color: var(--sub); line-height: 1.6; margin: 0; }
+    .actions { margin-top: 2rem; }
+    .btn { background: #fff; color: #000; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; text-decoration: none; transition: 0.2s; }
+    .btn:hover { background: #e4e4e7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">!</div>
+    <h1>Internal Server Error</h1>
+    <p>Something went wrong on our end. Please try again later.</p>
+    <div class="actions">
+      <a href="/" class="btn">Return Home</a>
+    </div>
+  </div>
+</body>
+</html>`;
 }
 
 function builtin404Page(urlPath: string): string {
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>404 \u2014 Not Found</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:monospace;background:#0f0f11;
-color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh}
-.wrap{text-align:center;padding:2rem;max-width:420px}.code{font-size:6rem;font-weight:700;
-color:#1e1e2e;letter-spacing:-.05em;line-height:1}.label{font-size:.85rem;color:#a78bfa;
-letter-spacing:.15em;text-transform:uppercase;margin:.75rem 0 1.5rem}.path{background:#1e1e2e;
-color:#64748b;padding:.4rem .8rem;border-radius:4px;font-size:.8rem;border:1px solid #334155}
-.hint{margin-top:2rem;font-size:.75rem;color:#475569}.hint a{color:#6366f1;text-decoration:none}
-</style></head>
-<body><div class="wrap"><div class="code">404</div><div class="label">Page not found</div>
-<div class="path">${urlPath}</div>
-<p class="hint">Add <code>404.xp</code> to your app directory to customise this page.<br>
-<a href="/">← Back home</a></p></div></body></html>`;
+  // Simple escape for the URL to prevent XSS in the error page
+  const esc = (s: string) =>
+    s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 Not Found — X+</title>
+  <style>
+    :root { --bg: #030303; --text: #fff; --sub: #52525b; --accent: #6366f1; }
+    body { background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+    
+    /* Background Glow */
+    body::before { content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(99,102,241,0.08) 0%, transparent 70%); pointer-events: none; }
+    
+    .content { position: relative; z-index: 10; text-align: center; max-width: 480px; padding: 2rem; }
+    .status { font-size: 0.75rem; font-weight: 700; color: var(--accent); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 1rem; }
+    h1 { font-size: 2.5rem; font-weight: 800; tracking: -0.04em; margin: 0 0 1rem; }
+    
+    .path-pill { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); padding: 6px 14px; border-radius: 99px; font-family: ui-monospace, monospace; font-size: 0.85rem; color: #a1a1aa; margin-bottom: 2rem; }
+    .path-pill span { color: var(--accent); font-weight: bold; }
+    
+    p.instruction { font-size: 0.9rem; color: var(--sub); line-height: 1.6; margin-bottom: 2.5rem; }
+    code { background: rgba(255,255,255,0.1); padding: 2px 5px; border-radius: 4px; color: #e2e8f0; font-family: ui-monospace, monospace; }
+    
+    .nav { display: flex; align-items: center; justify-content: center; gap: 24px; }
+    .nav a { color: var(--text); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: 0.2s; opacity: 0.6; }
+    .nav a:hover { opacity: 1; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="status">404 Error</div>
+    <h1>Lost in Space.</h1>
+    <div class="path-pill"><span>GET</span> ${esc(urlPath)}</div>
+    <p class="instruction">
+      We couldn't find this page. To customize this view, create a <code>404.xp</code> file in your project root.
+    </p>
+    <div class="nav">
+      <a href="/">← Back Home</a>
+      <a href="https://github.com">Documentation</a>
+    </div>
+  </div>
+</body>
+</html>`;
 }
