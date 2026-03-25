@@ -110,7 +110,7 @@ export class StyleResolver {
       const postcss = require("postcss");
       const tailwind = require("tailwindcss");
 
-      const hasTailwindDirectives = /@tailwind/.test(css);
+      const hasTailwindDirectives = /@import "tailwindcss";/.test(css);
 
       if (!hasTailwindDirectives) {
         // Plain CSS — just return as-is (PostCSS without plugins = no-op)

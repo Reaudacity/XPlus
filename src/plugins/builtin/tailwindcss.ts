@@ -69,7 +69,7 @@ export const tailwindcssPlugin: XPlusPlugin = {
       const tailwindcss = require("tailwindcss");
 
       const css =
-        "@tailwind base;\n@tailwind components;\n@tailwind utilities;";
+        "@import \"tailwindcss\";";
       const result = await postcss([
         tailwindcss({ content: [{ raw: html, extension: "html" }] }),
       ]).process(css, { from: undefined });
